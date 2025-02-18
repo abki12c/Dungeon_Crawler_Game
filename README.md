@@ -1,6 +1,10 @@
 # About
 In this dungeon crawler game the goal is to collect all dragon treasure while also avoiding traps
 
+# Controls
+
+- Keyboard & Mouse: Use WASD to move and Space to jump. Use the mouse for menu navigation and the scroll wheel to adjust the camera
+
 # Screenshots
 
  ![Build1 Screenshot 2025 02 19 - 01 20 00 13](https://github.com/user-attachments/assets/97ce1f7a-ff20-486a-acdf-1f88ad08146a)
