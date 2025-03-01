@@ -19,6 +19,7 @@ public class ArrowTrap : MonoBehaviour
         {
             if (arrows[i] != null)
             {
+                arrows[i].gameObject.SetActive(false);
                 initialPositions[i] = arrows[i].position;
             }
         }
@@ -54,19 +55,31 @@ public class ArrowTrap : MonoBehaviour
 
     private IEnumerator LaunchArrow(Transform arrow)
     {
+        int arrowIndex = System.Array.IndexOf(arrows, arrow);
+        if (arrowIndex >= 0)
+        {
+            arrow.position = initialPositions[arrowIndex];  // Reset position before launch
+        }
+
+        arrow.gameObject.SetActive(true);
         arrowSound.Play();
-        Vector3 targetPosition = arrow.position + (arrow.forward * 5f);
-        float journeyLength = Vector3.Distance(arrow.position, targetPosition);
+
+        Vector3 startPosition = arrow.position;  // Get reset position
+        Vector3 targetPosition = startPosition + (arrow.forward * 5f);  // Move forward from reset position
+
+        float journeyLength = Vector3.Distance(startPosition, targetPosition);
         float startTime = Time.time;
 
         while (Time.time < startTime + journeyLength / launchSpeed)
         {
             float distanceCovered = (Time.time - startTime) * launchSpeed;
             float fractionOfJourney = distanceCovered / journeyLength;
-            arrow.position = Vector3.Lerp(arrow.position, targetPosition, fractionOfJourney);
+            arrow.position = Vector3.Lerp(startPosition, targetPosition, fractionOfJourney);
             yield return null;
         }
     }
+
+
 
     private void ResetArrows()
     {
@@ -75,6 +88,7 @@ public class ArrowTrap : MonoBehaviour
             if (arrows[i] != null)
             {
                 arrows[i].position = initialPositions[i];
+                arrows[i].gameObject.SetActive(false);
             }
         }
     }
