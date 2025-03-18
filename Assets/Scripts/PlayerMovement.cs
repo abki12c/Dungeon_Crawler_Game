@@ -8,9 +8,6 @@ public class AnimationAndMovementController : MonoBehaviour
     Animator animator;
     Camera mainCamera;  // Reference to the main camera
 
-    int isWalkingHash;
-    int isRunningHash;
-
     Vector2 currentMovementInput;
     Vector3 currentMovement;
     bool isMovementPressed;
@@ -22,10 +19,11 @@ public class AnimationAndMovementController : MonoBehaviour
     public float runSpeed = 5.0f;
     public float rotationSpeed = 10.0f;
     public float gravity = -9.8f;
-    public float jumpHeight = 1.5f;  // Jump height variable
+    public float jumpHeight = 1f;  // Jump height variable
 
     private Vector3 playerVelocity;
     private bool isGrounded;
+    private bool isFirstFrame = true;
 
     private void Awake()
     {
@@ -33,9 +31,6 @@ public class AnimationAndMovementController : MonoBehaviour
         characterController = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
         mainCamera = Camera.main; // Get the main camera
-
-        isWalkingHash = Animator.StringToHash("isWalking");
-        isRunningHash = Animator.StringToHash("isRunning");
 
         // Subscribe to Input Actions
         playerInput.CharacterControls.Move.started += onMovementInput;
@@ -99,27 +94,38 @@ public class AnimationAndMovementController : MonoBehaviour
 
     void handleAnimation()
     {
-        bool isWalking = animator.GetBool(isWalkingHash);
-        bool isRunning = animator.GetBool(isRunningHash);
+        if (isFirstFrame)
+        {
+            animator.SetBool("isGrounded", true);
+            isFirstFrame = false;
+        }
+        else
+        {
+            animator.SetBool("isGrounded", isGrounded);
+        }
+       
+        animator.SetBool("isJumpRequested", isJumpPressed);
+        Debug.Log("isGrounded: " + isGrounded);
+        if (isMovementPressed)
+        {
+            // Calculate input magnitude based on actual movement speed
+            float moveSpeed = isRunPressed ? runSpeed : walkSpeed;
+            float inputMagnitude = Mathf.Clamp01(currentMovement.magnitude * (moveSpeed / runSpeed));
 
-        if (isMovementPressed && !isWalking)
-        {
-            animator.SetBool(isWalkingHash, true);
-        }
-        else if (!isMovementPressed && isWalking)
-        {
-            animator.SetBool(isWalkingHash, false);
-        }
+            // Smooth transition for better animation blending
+            animator.SetFloat("Input Magnitude", inputMagnitude, 0.15f, Time.deltaTime);
 
-        if (isMovementPressed && isRunPressed && !isRunning)
-        {
-            animator.SetBool(isRunningHash, true);
+            // Debugging
+            Debug.Log($"Input Magnitude: {inputMagnitude}");
+            
+            animator.SetBool("isMoving",true);
+        } else {
+            animator.SetBool("isMoving", false);
         }
-        else if ((!isMovementPressed || !isRunPressed) && isRunning)
-        {
-            animator.SetBool(isRunningHash, false);
-        }
+        
+
     }
+
 
     void handleGravity()
     {
@@ -149,10 +155,16 @@ public class AnimationAndMovementController : MonoBehaviour
         handleGravity();
         handleRotation();
         handleAnimation();
-        handleJump();  // Call jump handling
+        handleJump();
 
         float moveSpeed = isRunPressed ? runSpeed : walkSpeed;
-        characterController.Move((currentMovement * moveSpeed + playerVelocity) * Time.deltaTime);
+        Vector3 velocity = currentMovement * moveSpeed + playerVelocity;
+
+        // Ensure CharacterController is Moving
+        Debug.Log($"Velocity: X={velocity.x}, Y={velocity.y}, Z={velocity.z}, Magnitude={velocity.magnitude}");
+
+
+        characterController.Move(velocity * Time.deltaTime);
     }
 
     private void OnEnable()
