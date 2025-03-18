@@ -31,6 +31,7 @@ public class AnimationAndMovementController : MonoBehaviour
         characterController = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
         mainCamera = Camera.main; // Get the main camera
+        
 
         // Subscribe to Input Actions
         playerInput.CharacterControls.Move.started += onMovementInput;
@@ -40,6 +41,17 @@ public class AnimationAndMovementController : MonoBehaviour
         playerInput.CharacterControls.Run.canceled += onRun;
         playerInput.CharacterControls.Jump.started += onJump;  // Add the jump action
     }
+
+    private void Start()
+    {
+        // Force the player to be grounded by moving slightly down on start
+        Vector3 newPosition = transform.position;
+        newPosition.y -= 0.1f;  // Move the player down slightly to trigger ground check
+        characterController.Move(Vector3.down * 0.1f);  // Apply small downward movement to force grounded state
+        transform.position = newPosition;  // Update the position
+    }
+
+
 
     void onRun(InputAction.CallbackContext context)
     {
@@ -94,16 +106,9 @@ public class AnimationAndMovementController : MonoBehaviour
 
     void handleAnimation()
     {
-        if (isFirstFrame)
-        {
-            animator.SetBool("isGrounded", true);
-            isFirstFrame = false;
-        }
-        else
-        {
-            animator.SetBool("isGrounded", isGrounded);
-        }
-       
+        
+        animator.SetBool("isGrounded", isGrounded);
+
         animator.SetBool("isJumpRequested", isJumpPressed);
         Debug.Log("isGrounded: " + isGrounded);
         if (isMovementPressed)
